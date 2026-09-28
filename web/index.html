@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monica AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #090a0f;
+            --bg-surface: #12151f;
+            --bg-surface-elevated: #1a1e2e;
+            --bg-input: #151926;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(255, 208, 80, 0.4);
+            
+            --accent-gold: #ffd050;
+            --accent-gold-soft: rgba(255, 208, 80, 0.12);
+            --accent-cyan: #38bdf8;
+            --accent-cyan-soft: rgba(56, 189, 248, 0.12);
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-pill: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Subtle ambient glow header */
+        .ambient-radial {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 250px;
+            background: radial-gradient(ellipse at center, rgba(255, 208, 80, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            transition: background 0.6s ease;
+        }
+
+        /* -----------------------------------------------------------------
+           1. CLEAN TOP NAVIGATION BAR
+        ----------------------------------------------------------------- */
+        header {
+            position: relative;
+            z-index: 40;
+            height: 58px;
+            min-height: 58px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(9, 10, 15, 0.85);
+            backdrop-filter: blur(16px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd050, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #090a0f;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 0 12px rgba(255, 208, 80, 0.35);
+        }
+
+        .brand-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+            transition: all 0.3s ease;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            height: 34px;
+            padding: 0 12px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-btn.active {
+            background: var(--accent-gold-soft);
+            color: var(--accent-gold);
+            border-color: rgba(255, 208, 80, 0.35);
+        }
+
+        .icon-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* -----------------------------------------------------------------
+           2. MAIN CHAT & CONVERSATION CANVAS
+        ----------------------------------------------------------------- */
+        main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            height: calc(100vh - 58px);
+            max-height: calc(100vh - 58px);
+            padding: 0 16px 16px;
+            overflow: hidden;
+        }
+
+        /* Live Activity Subtitle Bar */
+        .live-bar {
+            padding: 8px 14px;
+            margin-top: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .live-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .live-bar-speaking {
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        /* Waveform Animation */
+        .wave-container {
+            display: flex;
+            align-items: center;
+            gap: 2.5px;
+            height: 12px;
+        }
+
+        .wave-bar {
+            width: 2.5px;
+            height: 4px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .wave-container.active .wave-bar {
+            animation: waveMotion 0.8s ease-in-out infinite alternate;
+        }
+        .wave-container.active .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-container.active .wave-bar:nth-child(2) { animation-delay: 0.3s; }
+        .wave-container.active .wave-bar:nth-child(3) { animation-delay: 0.5s; }
+        .wave-container.active .wave-bar:nth-child(4) { animation-delay: 0.2s; }
+
+        @keyframes waveMotion {
+            0% { height: 3px; }
+            100% { height: 12px; }
+        }
+
+        /* Chat Message List */
+        .chat-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .chat-welcome {
+            margin: auto;
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 440px;
+        }
+
+        .chat-welcome h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .chat-welcome p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .message-block {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: msgIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-block.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message-block.ai {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .msg-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 4px;
+            padding: 0 4px;
+            gap: 8px;
+        }
+
+        .msg-sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+        }
+
+        .btn-resend-inline {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-resend-inline:hover {
+            background: rgba(255, 208, 80, 0.15);
+            color: var(--accent-gold);
+            border-color: rgba(255, 208, 80, 0.4);
+            transform: scale(1.02);
+        }
+
+        .msg-bubble {
+            padding: 12px 18px;
+            border-radius: var(--radius-lg);
+            font-size: 14.5px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+
+        .timeout-bubble {
+            border-color: rgba(239, 68, 68, 0.45) !important;
+            background: rgba(239, 68, 68, 0.06) !important;
+        }
+
+        .timeout-action-row {
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .timeout-label {
+            font-size: 11px;
+            color: var(--accent-gold);
+            font-family: var(--font-mono);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .message-block.user .msg-bubble {
+            background: #2563eb;
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-block.ai .msg-bubble {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* -----------------------------------------------------------------
+           3. FLOATING CAMERA PICTURE-IN-PICTURE (COLLAPSIBLE)
+        ----------------------------------------------------------------- */
+        .camera-floating-card {
+            position: absolute;
+            top: 68px;
+            right: 20px;
+            width: 240px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            z-index: 60;
+            animation: slideDown 0.25s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .camera-card-header {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .camera-video-wrap {
+            width: 100%;
+            height: 140px;
+            background: #000;
+            position: relative;
+        }
+
+        .camera-video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .camera-card-footer {
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        /* -----------------------------------------------------------------
+           4. DRAWER / MODAL: NEURAL THOUGHTS & SYSTEM SPECS
+        ----------------------------------------------------------------- */
+        .drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 80;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .drawer-backdrop.visible {
+            opacity: 1;
+        }
+
+        .drawer-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(380px, 90vw);
+            height: 100vh;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-color);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .drawer-panel.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .drawer-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .drawer-section-title {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .thoughts-stream-box {
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .thought-item {
+            padding-bottom: 4px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+        .thought-item:last-child { border-bottom: none; }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .telem-box {
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .telem-lbl {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
+        }
+
+        .telem-val {
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+        }
+
+        /* -----------------------------------------------------------------
+           5. QUICK CHIPS & COMPACT FLOATING INPUT BAR
+        ----------------------------------------------------------------- */
+        .suggestions-bar {
+            display: flex;
+            gap: 6px;
+            padding: 8px 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .suggestions-bar::-webkit-scrollbar { display: none; }
+
+        .suggestion-chip {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 8px 6px 18px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--border-focus);
+            box-shadow: 0 4px 24px rgba(255, 208, 80, 0.15);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 14.5px;
+            font-family: var(--font-sans);
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-round-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-round-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .action-round-btn.btn-send {
+            background: var(--accent-gold);
+            color: #090a0f;
+        }
+        .action-round-btn.btn-send:hover {
+            background: #ffe082;
+            transform: scale(1.04);
+        }
+
+        .action-round-btn.active {
+            background: var(--accent-cyan-soft);
+            color: var(--accent-cyan);
+            border-color: rgba(56, 189, 248, 0.4);
+            animation: pulseActive 1.5s infinite;
+        }
+
+        @keyframes pulseActive {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        .action-round-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* -----------------------------------------------------------------
+           6. PERMISSION MODAL
+        ----------------------------------------------------------------- */
+        #permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            width: min(400px, 90vw);
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--accent-gold);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 208, 80, 0.2);
+        }
+
+        .modal-card h4 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .modal-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .modal-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-allow {
+            background: var(--accent-green);
+            color: #062315;
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-deny {
+            background: var(--accent-red);
+            color: #ffffff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-radial" id="ambient-glow"></div>
+
+    <!-- 1. CLEAN TOP NAVIGATION -->
+    <header>
+        <div class="header-left">
+            <div class="brand-avatar">M</div>
+            <div class="brand-titles">
+                <div class="brand-title">Monica AI</div>
+                <div class="status-pill">
+                    <span class="status-dot" id="status-dot"></span>
+                    <span id="status-text">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="icon-btn" id="btn-camera" onclick="toggleCamera()" title="Toggle Camera">
+                <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                <span id="cam-label">Vision</span>
+            </button>
+            <button class="icon-btn" id="btn-live" onclick="toggleLiveMode()" title="Toggle Continuous Live Conversation">
+                <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                <span id="live-label">Live</span>
+            </button>
+            <button class="icon-btn" onclick="toggleDrawer()" title="Diagnostics & Thoughts">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. FLOATING CAMERA PiP PREVIEW -->
+    <div class="camera-floating-card" id="camera-pip">
+        <div class="camera-card-header">
+            <span>● AI Camera Stream</span>
+            <span style="cursor:pointer;" onclick="toggleCamera()">✕</span>
+        </div>
+        <div class="camera-video-wrap">
+            <img id="camera-mjpeg" class="camera-video-feed" src="" style="display:none;" />
+            <video id="camera-webrtc" class="camera-video-feed" autoplay playsinline muted style="display:none;"></video>
+        </div>
+        <div class="camera-card-footer">
+            <span id="pip-users">Users: 0</span>
+            <span id="pip-gaze">Gaze: Scan</span>
+        </div>
+    </div>
+
+    <!-- 3. SLIDE-OUT DIAGNOSTICS & NEURAL THOUGHTS DRAWER -->
+    <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleDrawer()"></div>
+    <aside class="drawer-panel" id="drawer-panel">
+        <div class="drawer-header">
+            <h3>Neural Diagnostics</h3>
+            <span style="cursor:pointer; color:var(--text-secondary);" onclick="toggleDrawer()">✕</span>
+        </div>
+        <div class="drawer-body">
+            <div>
+                <div class="drawer-section-title">Cognitive Monologue</div>
+                <div class="thoughts-stream-box" id="thoughts-box">
+                    <div class="thought-item">[SYSTEM] Cognitive Engine synchronized.</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="drawer-section-title">System Status</div>
+                <div class="telemetry-grid">
+                    <div class="telem-box">
+                        <span class="telem-lbl">CORE</span>
+                        <span class="telem-val">LLaMA 3.2</span>
+                    </div>
+                    <div class="telem-box">
+                        <span class="telem-lbl">MOOD</span>
+                        <span class="telem-val" id="telem-mood" style="color:var(--accent-gold);">NEUTRAL</span>
+                    </div>
+                    <div class="telem-box">
+                        <span class="telem-lbl">SYNC</span>
+                        <span class="telem-val" style="color:var(--accent-green);">WS &lt; 5ms</span>
+                    </div>
+                    <div class="telem-box">
+                        <span class="telem-lbl">SPEAKER</span>
+                        <span class="telem-val" id="telem-speaker">STANDBY</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:auto;">
+                <button class="icon-btn" style="width:100%; justify-content:center; color:var(--accent-red);" onclick="stopAll()">
+                    🛑 Stop / Terminate System
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 4. MAIN CONVERSATION CANVAS -->
+    <main>
+        <!-- Dynamic Live State Bar (Only shows when active) -->
+        <div class="live-bar" id="live-bar">
+            <div class="live-bar-left">
+                <span id="live-bar-text">Waiting for commands...</span>
+            </div>
+            <div class="wave-container" id="wave-container">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+            </div>
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="chat-stream" id="chat-stream">
+            <div class="chat-welcome" id="chat-welcome">
+                <h2>Good Day, I'm Monica</h2>
+                <p>Your local AI companion powered by LLaMA 3.2. Ask me questions, start voice conversations, or use camera vision.</p>
+            </div>
+        </div>
+
+        <!-- Suggestions Chips -->
+        <div class="suggestions-bar">
+            <div class="suggestion-chip" onclick="quickSend('Who are you and what are your capabilities?')">Capabilities</div>
+            <div class="suggestion-chip" onclick="quickSend('Search internet for latest AI news today')">Search Web</div>
+            <div class="suggestion-chip" onclick="quickSend('What is my name?')">My Identity</div>
+            <div class="suggestion-chip" onclick="quickSend('Tell me a short witty joke')">Tell a Joke</div>
+            <div class="suggestion-chip" onclick="clearChat()">Clear Chat</div>
+        </div>
+
+        <!-- Compact Bottom Input Bar -->
+        <div class="input-wrapper">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask Monica anything..." onkeypress="handleEnter(event)">
+            <div class="input-actions">
+                <button class="action-round-btn" id="btn-mic" onclick="toggleVoiceInput()" title="Voice input">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+                <button class="action-round-btn btn-send" onclick="sendChat()" title="Send">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 5. PERMISSION MODAL -->
+    <div id="permission-modal">
+        <div class="modal-card">
+            <h4>Permission Required</h4>
+            <p>Monica requires your authorization to proceed with this action.</p>
+            <div class="modal-btns">
+                <button class="btn-allow" onclick="handlePermissionResponse('yes')">ALLOW</button>
+                <button class="btn-deny" onclick="handlePermissionResponse('no')">DENY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT SCRIPT -->
+    <script>
+        const chatStream = document.getElementById('chat-stream');
+        const chatInput = document.getElementById('chat-input');
+        const chatWelcome = document.getElementById('chat-welcome');
+        const thoughtsBox = document.getElementById('thoughts-box');
+        
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const liveBarText = document.getElementById('live-bar-text');
+        const waveContainer = document.getElementById('wave-container');
+        const ambientGlow = document.getElementById('ambient-glow');
+
+        const btnCamera = document.getElementById('btn-camera');
+        const camLabel = document.getElementById('cam-label');
+        const btnLive = document.getElementById('btn-live');
+        const btnMic = document.getElementById('btn-mic');
+        
+        const cameraPip = document.getElementById('camera-pip');
+        const cameraMjpeg = document.getElementById('camera-mjpeg');
+        const cameraWebrtc = document.getElementById('camera-webrtc');
+        const pipUsers = document.getElementById('pip-users');
+        const pipGaze = document.getElementById('pip-gaze');
+        const telemMood = document.getElementById('telem-mood');
+        const telemSpeaker = document.getElementById('telem-speaker');
+
+        const drawerBackdrop = document.getElementById('drawer-backdrop');
+        const drawerPanel = document.getElementById('drawer-panel');
+        const permissionModal = document.getElementById('permission-modal');
+
+        let isSpeaking = false;
+        let wasSpeaking = false;
+        let isMicMuted = false;
+        let isLiveMode = false;
+        let isCameraOn = false;
+        let cameraStream = null;
+        let recognition = null;
+        let isWebSpeechListening = false;
+        let lastChatLen = 0;
+        let lastThoughtLen = 0;
+        let ws = null;
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+            const wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${wsProtocol}${location.host}/ws`;
+
+            try {
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => {
+                    statusDot.style.background = "var(--accent-green)";
+                    statusText.innerText = "Online";
+                };
+                ws.onmessage = (event) => {
+                    try {
+                        const payload = JSON.parse(event.data);
+                        if (payload.type === "state" && payload.data) {
+                            applyStateUpdate(payload.data);
+                        }
+                    } catch(err) {}
+                };
+                ws.onclose = () => {
+                    statusDot.style.background = "var(--accent-red)";
+                    statusText.innerText = "Connecting...";
+                    setTimeout(connectWebSocket, 1500);
+                };
+            } catch(e) {
+                setTimeout(connectWebSocket, 1500);
+            }
+        }
+        connectWebSocket();
+
+        function applyStateUpdate(data) {
+            if (!data) return;
+
+            const justFinishedSpeaking = wasSpeaking && !data.speaking;
+            wasSpeaking = data.speaking;
+            isSpeaking = data.speaking;
+
+            if (isSpeaking) {
+                waveContainer.classList.add('active');
+                liveBarText.innerHTML = `<span class="live-bar-speaking">Monica: </span>` + escapeHtml(data.last_text || "Speaking...");
+            } else {
+                waveContainer.classList.remove('active');
+                if (data.last_text && data.last_text !== "Waiting for commands...") {
+                    liveBarText.innerText = data.last_text;
+                } else {
+                    liveBarText.innerText = "Ready for commands.";
+                }
+            }
+
+            if (justFinishedSpeaking && isLiveMode) {
+                setTimeout(startLiveListening, 350);
+            }
+
+            // Emotion
+            if (data.emotion) {
+                const em = data.emotion.toUpperCase();
+                telemMood.innerText = em;
+            }
+
+            // Speaker & Vision Telemetry
+            if (data.active_speaker_label) {
+                telemSpeaker.innerText = data.active_speaker_label.toUpperCase();
+            }
+            if (data.detected_faces_count !== undefined) {
+                pipUsers.innerText = `Users: ${data.detected_faces_count}`;
+                pipGaze.innerText = data.detected_faces_count > 0 ? "Gaze: Locked" : "Gaze: Scan";
+            }
+
+            // Permission Modal
+            if (data.needs_permission) {
+                permissionModal.style.display = "flex";
+            } else {
+                permissionModal.style.display = "none";
+            }
+
+            // Thoughts / Logs
+            if (data.thoughts && data.thoughts.length !== lastThoughtLen) {
+                renderThoughts(data.thoughts);
+                lastThoughtLen = data.thoughts.length;
+            }
+
+            // Chat Messages
+            if (data.chat_history && data.chat_history.length !== lastChatLen) {
+                renderChat(data.chat_history);
+                lastChatLen = data.chat_history.length;
+            }
+        }
+
+        let lastUserMessage = "";
+
+        function renderChat(history) {
+            if (!history || history.length === 0) {
+                chatWelcome.style.display = "block";
+                return;
+            }
+            chatWelcome.style.display = "none";
+            chatStream.innerHTML = "";
+
+            history.forEach(msg => {
+                const isUser = msg.sender === "You" || msg.sender === "User";
+                const isTimeout = Boolean(msg.timed_out || msg.failed);
+                const block = document.createElement("div");
+                block.className = `message-block ${isUser ? 'user' : 'ai'}`;
+                
+                if (isUser) {
+                    lastUserMessage = msg.message;
+                    const encodedMsg = encodeURIComponent(msg.message);
+                    block.innerHTML = `
+                        <div class="msg-meta-row">
+                            <span class="msg-sender">You</span>
+                            ${isTimeout ? `<button class="btn-resend-inline" onclick="resendMsg('${encodedMsg}')" title="Resend this message">↻ Resend</button>` : ''}
+                        </div>
+                        <div class="msg-bubble">${escapeHtml(msg.message)}</div>
+                    `;
+                } else {
+                    const encodedLast = encodeURIComponent(lastUserMessage);
+                    block.innerHTML = `
+                        <div class="msg-sender">Monica</div>
+                        <div class="msg-bubble ${isTimeout ? 'timeout-bubble' : ''}">
+                            ${escapeHtml(msg.message)}
+                            ${isTimeout ? `
+                                <div class="timeout-action-row">
+                                    <span class="timeout-label">⚠️ Response timed out</span>
+                                    <button class="btn-resend-inline" onclick="resendMsg('${encodedLast}')" title="Resend last message">↻ Resend</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                chatStream.appendChild(block);
+            });
+            chatStream.scrollTop = chatStream.scrollHeight;
+        }
+
+        function resendMsg(encoded) {
+            const decoded = decodeURIComponent(encoded);
+            if (decoded) {
+                sendCommand(decoded, "text");
+            }
+        }
+
+        function retryLast() {
+            if (lastUserMessage) {
+                sendCommand(lastUserMessage, "text");
+            }
+        }
+
+        function renderThoughts(thoughts) {
+            thoughtsBox.innerHTML = "";
+            thoughts.forEach(t => {
+                const div = document.createElement("div");
+                div.className = "thought-item";
+                div.innerText = t;
+                thoughtsBox.appendChild(div);
+            });
+            thoughtsBox.scrollTop = thoughtsBox.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        async function sendCommand(text, source = "text") {
+            const trimmed = (text || "").trim();
+            if (!trimmed) return;
+            chatInput.value = "";
+            lastUserMessage = trimmed;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "input", text: trimmed, source: source }));
+            } else {
+                try {
+                    await fetch('/api/input', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: trimmed, source: source })
+                    });
+                } catch(e){}
+            }
+        }
+
+        function sendChat() {
+            if (chatInput.value.trim()) sendCommand(chatInput.value, "text");
+        }
+
+        function quickSend(txt) {
+            sendCommand(txt, "text");
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendChat();
+        }
+
+        function clearChat() {
+            chatStream.innerHTML = "";
+            chatWelcome.style.display = "block";
+        }
+
+        function toggleDrawer() {
+            const isOpen = drawerPanel.classList.contains('open');
+            if (isOpen) {
+                drawerPanel.classList.remove('open');
+                drawerBackdrop.classList.remove('visible');
+                setTimeout(() => drawerBackdrop.style.display = "none", 200);
+            } else {
+                drawerBackdrop.style.display = "block";
+                setTimeout(() => {
+                    drawerBackdrop.classList.add('visible');
+                    drawerPanel.classList.add('open');
+                }, 10);
+            }
+        }
+
+        function handlePermissionResponse(ans) {
+            sendCommand(ans);
+            permissionModal.style.display = "none";
+        }
+
+        // Voice Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isWebSpeechListening = true;
+                btnMic.classList.add('active');
+            };
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                if (transcript && transcript.trim()) {
+                    sendCommand(transcript.trim(), "voice");
+                }
+            };
+            recognition.onerror = () => {
+                stopVoice();
+                if (isLiveMode && !isSpeaking) setTimeout(startLiveListening, 700);
+            };
+            recognition.onend = () => {
+                stopVoice();
+                if (isLiveMode && !isSpeaking) setTimeout(startLiveListening, 400);
+            };
+        }
+
+        function startLiveListening() {
+            if (!isLiveMode || isSpeaking || isWebSpeechListening || !recognition) return;
+            try { recognition.start(); } catch(e){}
+        }
+
+        function toggleLiveMode() {
+            isLiveMode = !isLiveMode;
+            if (isLiveMode) {
+                btnLive.classList.add('active');
+                startLiveListening();
+            } else {
+                btnLive.classList.remove('active');
+                if (isWebSpeechListening && recognition) recognition.stop();
+                stopVoice();
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (recognition) {
+                if (isWebSpeechListening) {
+                    recognition.stop();
+                    stopVoice();
+                } else {
+                    try { recognition.start(); } catch(e){}
+                }
+            } else {
+                if (isMicMuted) sendCommand("CMD_UNMUTE_MIC");
+                else sendCommand("CMD_MUTE_MIC");
+            }
+        }
+
+        function stopVoice() {
+            isWebSpeechListening = false;
+            btnMic.classList.remove('active');
+        }
+
+        // Camera Toggle
+        async function toggleCamera() {
+            if (isCameraOn) {
+                sendCommand("CMD_STOP_CAMERA");
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                    cameraStream = null;
+                }
+                cameraMjpeg.src = "";
+                cameraMjpeg.style.display = "none";
+                cameraWebrtc.srcObject = null;
+                cameraWebrtc.style.display = "none";
+                cameraPip.style.display = "none";
+                btnCamera.classList.remove('active');
+                camLabel.innerText = "Vision";
+                isCameraOn = false;
+            } else {
+                sendCommand("CMD_START_CAMERA");
+                cameraPip.style.display = "flex";
+                cameraMjpeg.style.display = "block";
+                cameraWebrtc.style.display = "none";
+                setTimeout(() => {
+                    cameraMjpeg.src = "/api/video_feed?t=" + Date.now();
+                }, 350);
+
+                cameraMjpeg.onerror = async () => {
+                    cameraMjpeg.style.display = "none";
+                    cameraWebrtc.style.display = "block";
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { width: { ideal: 480 }, height: { ideal: 360 }, facingMode: "user" },
+                            audio: false
+                        });
+                        cameraWebrtc.srcObject = cameraStream;
+                    } catch(err){}
+                };
+
+                btnCamera.classList.add('active');
+                camLabel.innerText = "Cam ON";
+                isCameraOn = true;
+            }
+        }
+
+        function stopAll() {
+            if (isLiveMode) toggleLiveMode();
+            if (isCameraOn) toggleCamera();
+            sendCommand('STOP');
+        }
+
+        // Fallback polling
+        async function fetchFallback() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+            try {
+                const res = await fetch('/api/state');
+                const data = await res.json();
+                applyStateUpdate(data);
+            } catch(e){}
+        }
+        fetchFallback();
+        setInterval(fetchFallback, 2500);
+    </script>
+</body>
+</html>

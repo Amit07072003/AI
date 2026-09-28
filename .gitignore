@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment & Keys
+.env
+api_key.txt
+
+# Local heavy binaries & models (Render Free Tier uses Cloud LLM APIs like Gemini)
+bin/*.exe
+models/*.gguf
+*.gguf
+
+# Audio recordings & temp cache
+*.mp3
+*.wav
+*.npy
+
+# OS files
+.DS_Store
+Thumbs.db
